@@ -1,0 +1,434 @@
+# Bankai Release: Ichimonku Kinyo Hyo Version 2.03JKR
+import openai
+import talib
+import numpy as np
+import pandas as pd
+import requests
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM, Dropout
+import time
+
+# Economic data library
+from fredapi import Fred
+
+# Constants
+UPDATE_INTERVAL = 1800  # 1 hour in seconds
+SYMBOLS = ["BTC-USD", "CRO-USD", "DOGE-USD", "LRC-USD", "MASK-USD", "ADA-USD", "BCH-USD", "ETH-USD"]
+TRADING_INTERVAL = 1800  # 1 hour in seconds
+ORDER_SIZE = 0.01  # 0.01 BTC
+STOP_LOSS_PCT = 0.05  # 5%
+TAKE_PROFIT_PCT = 0.10  # 10%
+
+# Set up OpenAI API key
+openai.api_key = "INSERT_API_KEY_HERE"
+
+# Define function to evaluate performance of a model using specified parameters
+def evaluate_model(params):
+    # Define model architecture and hyperparameters
+    num_layers = params["num_layers"]
+    hidden_size = params["hidden_size"]
+    learning_rate = params["learning_rate"]
+
+    # Train and evaluate the model on a dataset
+    model = SomeModel(num_layers=num_layers, hidden_size=hidden_size)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    loss_fn = torch.nn.MSELoss()
+    dataset = SomeDataset()
+    train_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+    for epoch in range(10):
+        for x, y in train_loader:
+            optimizer.zero_grad()
+            y_pred = model(x)
+            loss = loss_fn(y_pred, y)
+            loss.backward()
+            optimizer.step()
+    performance = model.evaluate(SomeEvaluationDataset())
+    return performance
+
+# Set up Coinbase API credentials
+coinbase_api_key = "INSERT_API_KEY_HERE"
+coinbase_api_secret = "INSERT_API_SECRET_HERE"
+coinbase_api_passphrase = "INSERT_API_PASSPHRASE_HERE"
+
+# Set up trading parameters
+symbols = ["BTC-USD", "CRO-USD", "DOGE-USD", "LRC-USD", "MASK-USD", "ADA-USD", "BCH-USD", "ETH-USD"]
+interval = "1d"  # daily interval
+lookback_window = 14  # number of days to look back for features
+n_features = 6  # number of features (OHLCV + Volume)
+n_days = 365  # number of days to train on
+batch_size = 32  # batch size for training
+learning_rate = 0.001  # learning rate for optimizer
+n_epochs = 100  # number of epochs for training
+trading_interval = 3600  # 1 hour in seconds
+order_size = 0.01  # 0.01 BTC
+stop_loss_pct = 0.05  # 5%
+take_profit_pct = 0.10  # 10%
+learning_rate = 0.001
+
+def get_coin_sentiment(self, coin, text_data):
+    # Use OpenAI GPT-3 to generate sentiment score for coin
+    text = "The sentiment for " + coin + " is "
+    for article in text_data:
+        text += article
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=text,
+        max_tokens=1024,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    sentiment = response.choices[0].text.strip()
+    if "positive" in sentiment:
+        return 1
+    elif "negative" in sentiment:
+        return -1
+    else:
+        return 0
+# Define the reinforcement learning trading agent
+class RLTradingAgent:
+    def __init__(self, symbols, trading_interval, order_size, stop_loss_pct, take_profit_pct):
+        self.symbols = symbols
+        self.trading_interval = trading_interval
+        self.order_size = order_size
+        self.stop_loss_pct = stop_loss_pct
+        self.take_profit_pct = take_profit_pct
+        self.df_dict = {}
+        self.rsi_dict = {}
+        self.bbands_dict = {}
+        self.ichimoku_dict = {}
+        self.prev_action_dict = {}
+        self.prev_profit_dict = {}
+        self.prev_state_dict = {}
+        self.epsilon = 1.0
+        self.epsilon_decay = 0.999
+        self.epsilon_min = 0.01
+        self.gamma = 0.99
+        self.alpha = 0.01
+        self.q_table_dict = {}
+        self.rewards_dict = {}
+        self.done_dict = {}
+        self.current_step_dict = {}
+        self.total_steps = 0
+        self.update_interval = UPDATE_INTERVAL
+        self.last_update_time = time.time()
+
+        # Initialize the data for each symbol
+        for symbol in self.symbols:
+            self.df_dict[symbol] = pd.DataFrame()
+            self.rsi_dict[symbol] = pd.Series(dtype=float)
+            self.bbands_dict[symbol] = pd.DataFrame(columns=["upper_band", "middle_band", "lower_band"])
+            self.ichimoku_dict[symbol] = None
+            self.prev_action_dict[symbol] = None
+            self.prev_profit_dict[symbol] = 0.0
+            self.prev_state_dict[symbol] = None
+            self.q_table_dict[symbol] = {}
+            self.rewards_dict[symbol] = []
+            self.done_dict[symbol] = False
+            self.current_step_dict[symbol] = 0
+
+# Fetch historical prices from Coinbase Pro API
+url = f"https://api.pro.coinbase.com/products/{symbol}/candles?granularity={trading_interval}"
+response = requests.get(url)
+data = response.json()
+df = pd.DataFrame(data, columns=["time", "low", "high", "open", "close", "volume"])
+df["time"] = pd.to_datetime(df["time"], unit="s")
+df = df.set_index("time")
+
+# Download historical data for each symbol
+data = {}
+for symbol in symbols:
+    url = f"https://api.coinbase.com/v2/prices/{symbol}/historic?period={interval}"
+    response = requests.get(url)
+    json_data = response.json()
+    df = pd.DataFrame(json_data["data"]["prices"], columns=["time", "price"])
+    df["time"] = pd.to_datetime(df["time"])
+    df["price"] = pd.to_numeric(df["price"])
+    df.set_index("time", inplace=True)
+    data[symbol] = df
+
+# Obtain cryptocurrency trading data
+crypto_data = {}
+for symbol in symbols:
+    url = f'https://api.cryptowat.ch/markets/kraken/{symbol}usd/ohlc?periods={timeframe}&start={start_date}&end={end_date}'
+    data = pd.read_json(url)
+    data = data['result'][f'{timeframe}']
+    data = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume', 'NA'])
+    data['time'] = pd.to_datetime(data['time'], unit='s')
+    data = data.set_index('time')
+    data = data[['close']]
+    crypto_data[symbol] = data
+
+# Define the architecture of the deep learning model
+model = Sequential()
+model.add(LSTM(units=50, return_sequences=True, input_shape=(60, 1)))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50))
+model.add(Dropout(0.2))
+model.add(Dense(units=1))
+
+# Prepare data for training
+X = []
+y = []
+for symbol, df in data.items():
+    # Calculate technical indicators
+    high = df["price"].rolling(lookback_window).max()
+    low = df["price"].rolling(lookback_window).min()
+    close = df["price"]
+    volume = np.log10(df["price"].rolling(lookback_window).mean())
+    ema_12 = df["price"].ewm(span=12).mean()
+    ema_26 = df["price"].ewm(span=26).mean()
+    macd = ema_12 - ema_26
+    signal = macd.ewm(span=9).mean()
+    rsi = talib.RSI(df["price"].values, timeperiod=14)
+
+    # Combine features into array
+    features = np.column_stack((high, low, close, volume, macd, signal))
+
+    # Normalize features
+    features = (features - np.mean(features, axis=0)) / np.std(features, axis=0)
+
+    # Add features and labels to training data
+    for i in range(lookback_window, len(df) - 1):
+        X.append(features[i - lookback_window:i])
+        y.append(df["price"].iloc[i + 1])
+
+# Convert to numpy arrays
+X = np.array(X)
+y = np.array(y)
+
+# Define deep learning model
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(lookback_window, n_features)),
+    tf.keras.layers.LSTM(units=32),
+    tf.keras.layers.Dense(units=16, activation="relu"),
+    tf.keras.layers.Dense(units=1)
+])
+
+# Compile model with optimizer and loss function
+optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+model.compile(optimizer=optimizer, loss="mse")
+
+# Train model on data
+model.fit(X_train, y_train, epochs=100, batch_size=32)
+history = model.fit(X[:n_days], y[:n_days], batch_size=batch_size, epochs=n_epochs)
+
+# Make predictions using the trained model
+X_test = []
+for symbol in symbols:
+    data = crypto_data[symbol].values
+    X_test.append(data[-60:])
+X_test = np.array(X_test)
+X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+predictions = model.predict(X_test)
+
+# Print the predicted prices for the next day
+for i in range(len(symbols)):
+    print(f"The predicted price of {symbols[i]} for the next day is {predictions[i][0]:.2f}.")
+
+class EvolvedIchimokuCloud:
+    def __init__(self, high, low, close, tenkan_period=9, kijun_period=26, senkou_period=52):
+        self.high = high
+        self.low = low
+        self.close = close
+        self.tenkan_period = tenkan_period
+        self.kijun_period = kijun_period
+        self.senkou_period = senkou_period
+        
+        # Calculate the Tenkan-sen line
+        self.tenkan_sen = (talib.MAX(self.high, timeperiod=self.tenkan_period) + talib.MIN(self.low, timeperiod=self.tenkan_period)) / 2
+        
+        # Calculate the Kijun-sen line
+        self.kijun_sen = (talib.MAX(self.high, timeperiod=self.kijun_period) + talib.MIN(self.low, timeperiod=self.kijun_period)) / 2
+        
+        # Calculate the Senkou Span A line
+        self.senkou_span_a = (self.tenkan_sen + self.kijun_sen) / 2
+        self.senkou_span_a = np.concatenate((np.full(self.kijun_period, np.nan), self.senkou_span_a[:-self.kijun_period]))
+        
+        # Calculate the Senkou Span B line
+        self.senkou_span_b = (talib.MAX(self.high, timeperiod=self.senkou_period) + talib.MIN(self.low, timeperiod=self.senkou_period)) / 2
+        self.senkou_span_b = np.concatenate((np.full(self.kijun_period, np.nan), self.senkou_span_b[:-self.kijun_period]))
+        
+        # Calculate the Chikou Span line
+        self.chikou_span = self.close.shift(-self.kijun_period)
+        
+    def plot(self):
+        fig, ax = plt.subplots(figsize=(12,8))
+
+        # Plot the Kumo Cloud
+        ax.fill_between(self.senkou_span_a.index, self.senkou_span_a, self.senkou_span_b, where=self.senkou_span_a>=self.senkou_span_b, facecolor='green', interpolate=True, alpha=0.2)
+        ax.fill_between(self.senkou_span_a.index, self.senkou_span_a, self.senkou_span_b, where=self.senkou_span_a<self.senkou_span_b, facecolor='red', interpolate=True, alpha=0.2)
+
+        # Plot the other lines
+        ax.plot(self.tenkan_sen.index, self.tenkan_sen, label='Tenkan-sen')
+        ax.plot(self.kijun_sen.index, self.kijun_sen, label='Kijun-sen')
+        ax.plot(self.senkou_span_a.index, self.senkou_span_a, label='Senkou Span A')
+        ax.plot(self.senkou_span_b.index, self.senkou_span_b, label='Senkou Span B')
+        ax.plot(self.chikou_span.index, self.chikou_span, label='Chikou Span')
+
+        ax.legend(loc='best')
+        ax.grid(True)
+        ax.xaxis.set_tick_params(rotation=30)
+        ax.set_title('Evolved Ichimoku Cloud')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Price')
+
+        plt.show()
+
+# Calculate technical indicators using TA-Lib
+rsi = talib.RSI(df["close"], timeperiod=14)
+upper_band, middle_band, lower_band = talib.BBANDS(df["close"], timeperiod=20)
+
+# Instantiate the EvolvedIchimokuCloud class
+ichimoku = EvolvedIchimokuCloud(df['high'], df['low'], df['close'])
+
+# Define function to evaluate trading strategy
+def evaluate_strategy(params):
+    # Load data and apply strategy using parameters
+    data = pd.read_csv("crypto_data.csv")
+    # Use params to define strategy
+    ...
+    # Calculate performance metrics
+    return {"profit": profit, "sharpe_ratio": sharpe_ratio}
+
+# Define search space for parameters
+search_space = {
+    "parameter_1": {"type": "float", "min": 0.0, "max": 1.0},
+    "parameter_2": {"type": "int", "min": 1, "max": 100},
+    "parameter_3": {"type": "categorical", "values": ["option1", "option2", "option3"]},
+    # Add more parameters as needed
+}
+
+# Define constraints for optimization
+constraints = {
+    "constraint_1": "parameter_1 + parameter_2 > 0.5",
+    "constraint_2": "parameter_2 * parameter_3 < 100",
+    # Add more constraints as needed
+}
+
+# Run BART optimization
+result = openai.BART.optimize(
+    evaluate=evaluate_strategy,
+    search_space=search_space,
+    constraints=constraints,
+    n_samples=1000,
+    n_iterations=10,
+)
+
+# Print the best parameters and performance metrics
+print(f"Best parameters: {result['best_params']}")
+print(f"Best performance: {result['best_score']}")
+
+# Generate trading signals using GPT-3.5
+text = f"The RSI for {symbol} is {rsi.iloc[-1]:.2f}. The price is currently {df['close'].iloc[-1]:.2f} with the upper Bollinger Band at {upper_band.iloc[-1]:.2f} and the lower Bollinger Band at {lower_band.iloc[-1]:.2f}. Based on these indicators, I recommend {order_size:.2f} BTC at the current market price with a stop loss of {stop_loss_pct:.2f}% and a take profit of {take_profit_pct:.2f}%."
+response = openai.Completion.create(
+    engine="davinci",
+    prompt=text,
+    max_tokens=1024,
+    n=1,
+    stop=None,
+    temperature=0.5,
+)
+trade_signal = response.choices[0].text.strip()
+
+# Execute trade based on trading signal
+if "buy" in trade_signal:
+    order_type = "market"
+    side = "buy"
+    price = None
+elif "sell" in trade_signal:
+    order_type = "market"
+    side = "sell"
+    price = None
+elif "long" in trade_signal:
+    order_type = "limit"
+    side = "buy"
+    price = df["close"].iloc[-1] * (1 - stop_loss_pct)
+elif "short" in trade_signal:
+    order_type = "limit"
+    side = "sell"
+    price = df["close"].iloc[-1] * (1 + stop_loss_pct)
+
+if order_type == "market":
+    response = requests.post(
+        f"https://api.pro.coinbase.com/orders",
+        json={
+            "size": order_size,
+            "type": order_type,
+            "side": side,
+            "product_id": symbol,
+        },
+        auth=(coinbase_api_key, coinbase_api_secret, coinbase_api_passphrase),
+    )
+    print(response.json())
+elif order_type == "limit":
+    if price is None:
+        print("Error: price not specified for limit order")
+def ExecuteTrades(self, trades):
+    for trade in trades:
+        coin = trade['coin']
+        order_type = trade['order_type']
+        quantity = trade['quantity']
+        price = trade['price']
+
+        symbol = self.symbol_mapper.GetLeanSymbol(coin, SecurityType.Crypto, Market.Coinbase)
+        security = self.Securities[symbol]
+
+        # Calculate trading fees
+        fee_rate = 0.005  # Coinbase Pro fee rate is 0.5%
+        fee = fee_rate * quantity * price
+
+        if order_type == 'market':
+            self.MarketOrder(symbol, quantity)
+            self.Log(f"Executed {order_type} order for {coin}: Quantity = {quantity}, Fee = {fee:.4f}")
+        elif order_type == 'limit':
+            if price is None:
+                print("Error: price not specified for limit order")
+                continue
+
+            self.LimitOrder(symbol, quantity, price)
+            self.Log(f"Executed {order_type} order for {coin}: Quantity = {quantity}, Price = {price:.4f}, Fee = {fee:.4f}")
+    def OnData(self, data):
+        for coin in self.coins:
+            news_articles = self.news.get_articles(coin)
+            coin_text_data = news_articles  # + tweets
+            # tweets = self.twitter.get_tweets(coin)
+            # Combine news_articles and tweets
+            sentiment_scores[coin] = self.get_coin_sentiment(coin, coin_text_data)
+            security = self.Securities[self.symbol_mapper.GetLeanSymbol(coin, SecurityType.Crypto, Market.Coinbase)]
+
+            if not security.Invested:
+                continue
+
+            # Check if we need to adjust the trailing stop loss order
+            if self.trailing_stop_loss_orders[coin] is not None:
+                current_price = security.Price
+                if self.trailing_stop_loss_orders[coin].StopPrice < current_price * (1 - self.trailing_stop_loss_pct):
+                    # Move the stop price down to the new trailing stop loss level
+                    new_stop_price = current_price * (1 - self.trailing_stop_loss_pct)
+                    self.trailing_stop_loss_orders[coin].Update(new_stop_price)
+                    self.Log(f'Adjusting trailing stop loss order for {coin}: New stop price = {new_stop_price}')
+            else:
+                # Check if we need to place a trailing stop loss order
+                if security.Holdings.UnrealizedProfitPercent < 0:
+                    stop_price = security.Price * (1 - self.trailing_stop_loss_pct)
+                    quantity = security.Holdings.Quantity
+                    trailing_stop_loss_order = self.StopMarketOrder(symbol, -quantity, stop_price)
+                    self.trailing_stop_loss_orders[coin] = trailing_stop_loss_order
+                    self.Log(f'Placed trailing stop loss order for {coin}: Stop price = {stop_price}')
+def rsi_cross_strategy(df):
+    rsi = talib.RSI(df["close"], timeperiod=14)
+    rsi_buy_signal = (rsi.shift(1) < 30) & (rsi >= 30)
+    rsi_sell_signal = (rsi.shift(1) > 70) & (rsi <= 70)
+
+    buy_signal = rsi_buy_signal
+    sell_signal = rsi_sell_signal
+
+    return buy_signal, sell_signal
+
+# Print the predicted prices for the next day
+for i in range(len(symbols)):
+    print(f"The predicted price of {symbols[i]} for the next day is {predictions[i][0]:.2f}.")
