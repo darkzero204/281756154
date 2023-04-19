@@ -21,7 +21,7 @@ STOP_LOSS_PCT = 0.05  # 5%
 TAKE_PROFIT_PCT = 0.10  # 10%
 
 # Set up OpenAI API key
-openai.api_key = "INSERT_API_KEY_HERE"
+openai.api_key = "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"
 
 # Define function to evaluate performance of a model using specified parameters
 def evaluate_model(params):
@@ -47,9 +47,9 @@ def evaluate_model(params):
     return performance
 
 # Set up Coinbase API credentials
-coinbase_api_key = "INSERT_API_KEY_HERE"
-coinbase_api_secret = "INSERT_API_SECRET_HERE"
-coinbase_api_passphrase = "INSERT_API_PASSPHRASE_HERE"
+coinbase_api_key = "XHj9kwVlH1ycown7"
+coinbase_api_secret = "zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI"
+coinbase_api_passphrase = "!,M!QiE/v$9tfyw"
 
 # Set up trading parameters
 symbols = ["BTC-USD", "CRO-USD", "DOGE-USD", "LRC-USD", "MASK-USD", "ADA-USD", "BCH-USD", "ETH-USD"]
