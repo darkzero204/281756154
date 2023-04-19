@@ -19,6 +19,21 @@ ORDER_SIZE = 0.01  # 0.01 BTC
 STOP_LOSS_PCT = 0.05  # 5%
 TAKE_PROFIT_PCT = 0.10  # 10%
 
+# Set up Coinbase API credentials
+coinbase_api_key = "XHj9kwVlH1ycown7"
+coinbase_api_secret = "zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI"
+coinbase_api_passphrase = "!,M!QiE/v$9tfyw"
+
+coinbase_client = Client(api_key, api_secret)
+
+# Get Coinbase Wallet Balance
+def get_account_balance(coinbase_client, currency):
+    accounts = coinbase_client.get_accounts()
+    for account in accounts["data"]:
+        if account["currency"] == currency:
+            return float(account["balance"]["amount"])
+    return 0
+
 # Set up OpenAI API key
 openai.api_key = "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"
 
@@ -26,6 +41,10 @@ openai.api_key = "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"
 model_name = "EleutherAI/gpt-neo-3.5-turbo"
 tokenizer = GPT2Tokenizer.from_pretrained(model_name)
 model = GPT3LMHeadModel.from_pretrained(model_name)
+
+# Get account balance
+currency = "BTC"
+balance = get_account_balance(coinbase_client, currency)
 
 # Define function to evaluate performance of a model using specified parameters
 def evaluate_model(params):
@@ -50,21 +69,6 @@ def evaluate_model(params):
     performance = model.evaluate(SomeEvaluationDataset())
     return performance
 
-# Set up Coinbase API credentials
-coinbase_api_key = "XHj9kwVlH1ycown7"
-coinbase_api_secret = "zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI"
-coinbase_api_passphrase = "!,M!QiE/v$9tfyw"
-
-coinbase_client = Client(api_key, api_secret)
-
-# Get Coinbase Wallet Balance
-def get_account_balance(coinbase_client, currency):
-    accounts = coinbase_client.get_accounts()
-    for account in accounts["data"]:
-        if account["currency"] == currency:
-            return float(account["balance"]["amount"])
-    return 0
-    
 # Set up trading parameters
 symbols = ["BTC-USD", "CRO-USD", "DOGE-USD", "LRC-USD", "MASK-USD", "ADA-USD", "BCH-USD", "ETH-USD"]
 interval = "1d"  # daily interval
@@ -451,10 +455,6 @@ def generate_text(prompt, model, tokenizer):
     inputs = tokenizer(prompt, return_tensors="pt", max_length=1024)
     outputs = model.generate(**inputs)
     return tokenizer.decode(outputs[0])
-
-# Get account balance
-currency = "BTC"
-balance = get_account_balance(coinbase_client, currency)
 
 # Generate a prompt for GPT-3.5
 prompt = f"I have a balance of {balance} {currency} in my Coinbase wallet. Should I make a trade? What factors should I consider?"
