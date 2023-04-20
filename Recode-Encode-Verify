@@ -19,6 +19,10 @@ from transformers import GPT2Tokenizer, GPT3LMHeadModel
 # Technical indicators and cryptocurrency exchange libraries
 import talib
 import ccxt
+import coinbase
+from coinbase.wallet.client import Client
+
+client = Client(XHj9kwVlH1ycown7, zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI)
 
 # A.I Error handling and Exception
 import requests
@@ -35,13 +39,6 @@ TAKE_PROFIT_PCT = 0.10  # 10%
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-# Set up Coinbase API credentials
-coinbase_api_key = "XHj9kwVlH1ycown7"
-coinbase_api_secret = "zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI"
-coinbase_api_passphrase = "!,M!QiE/v$9tfyw"
-
-coinbase_client = Client(api_key, api_secret)
 
 # Set up OpenAI API key
 openai.api_key = "sk-...IUfj"
