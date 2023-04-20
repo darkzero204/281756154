@@ -1,13 +1,14 @@
-# Bankai Model Release: Ichimonku Kinyo Hyo Version J2K0R1
+# Bankai Release: Ichimonku Kinyo Hyo Version 2.03JKR
 
 # Data manipulation and mathematical libraries
 import numpy as np
 import pandas as pd
 import time
-from datetime import timedelta
+import matplotlib.pyplot as plt
+
 
 # Machine learning and deep learning libraries
-import tensorflow as tf
+import tensorflow as tf 
 import openai
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -38,7 +39,7 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 # Set up Coinbase API credentials
 coinbase_api_key = "XHjxxxxxxn7"
-coinbase_api_secret = "zFpKW1CxxxxxxxRaoRhkI"
+coinbase_api_secret = "zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI"
 coinbase_api_passphrase = "!,Mxxxxxxxfyw"
 
 coinbase_client = Client(api_key, api_secret)
@@ -104,25 +105,45 @@ def get_crypto_data(symbol, timeframe, start_date, end_date):
     data = data[['close']]
     return data
 
-# Generate Trading Signal under the Artificial Intelligence
-def generate_trading_signal(symbol, gpt3_prompt, ichimoku_data):
-    """
-    Generate a trading signal based on GPT-3.5 output and Evolved Ichimoku Cloud.
+# Calculate technical indicators using TA-Lib
+rsi = talib.RSI(df["close"], timeperiod=14)
+upper_band, middle_band, lower_band = talib.BBANDS(df["close"], timeperiod=20)
 
-    :param symbol: The trading symbol (e.g., "BTC-USD, CRO-USD, DOGE-USD, LRC-USD, MASK-USD, ADA-USD, BCH-USD, ETH-USD")
-    :param gpt3_prompt: A prompt for GPT-3.5 to generate a response
-    :param ichimoku_data: A dataframe containing Evolved Ichimoku Cloud data
-    :return: A string representing the trading signal, either "buy", "sell", or "hold"
-    """
-    # Generate GPT-3.5 response
-    input_ids = tokenizer.encode(gpt3_prompt, return_tensors="pt")
-    output = model.generate(input_ids, max_length=50, num_return_sequences=1)
-    gpt3_response = tokenizer.decode(output[0], skip_special_tokens=True)
+# Release Control Wave Restriction Level 0
+class ElliottWaveFinder:
+    def __init__(self, data, tolerance=0.05):
+        if not isinstance(data, pd.DataFrame) or 'Close' not in data.columns:
+            raise ValueError("Data should be a pandas DataFrame with a 'Close' column.")
+        
+        self.data = data
+        self.tolerance = tolerance
+        
+    def find_extrema_points(self):
+        extrema = (self.data['Close'].shift(1) > self.data['Close']) & (self.data['Close'].shift(-1) > self.data['Close']) \
+                | (self.data['Close'].shift(1) < self.data['Close']) & (self.data['Close'].shift(-1) < self.data['Close'])
+        return self.data[extrema].index
 
-    # Analyze the GPT-3.5 response to get a sentiment score (-1, 0, or 1)
-    sentiment_score = analyze_gpt3_response(gpt3_response)
+    def is_wave_pattern(self, prices):
+        p1, p2, p3, p4, p5 = prices
+        return (abs(p3 - p1) / p1 <= self.tolerance) and (abs(p5 - p1) / p1 <= self.tolerance) and (abs(p3 - p5) / p5 <= self.tolerance)
 
-    # Release Bankai Ichimonku Kinkyo Hyo
+    def find_elliott_waves(self):
+        waves = []
+        extrema_points = self.find_extrema_points()
+
+        for i in range(len(extrema_points) - 4):
+            price_points = self.data['Close'][extrema_points[i:i+5]]
+            if self.is_wave_pattern(price_points):
+                waves.append((extrema_points[i], extrema_points[i+1], extrema_points[i+2], extrema_points[i+3], extrema_points[i+4]))
+
+    def find_elliott_wave(self, data, tolerance=0.05):
+        # Ensure data has a 'Close' column
+        if 'Close' not in data.columns:
+            raise ValueError("Data should have a 'Close' column.")
+
+        return waves
+    
+        # Release Bankai Ichimonku Kinkyo Hyo
     ichimoku_signal = analyze_ichimoku_cloud(ichimoku_data)
     class EvolvedIchimokuCloud:
         def __init__(self, high, low, close, tenkan_period=9, kijun_period=26, senkou_period=52):
@@ -180,58 +201,31 @@ def generate_trading_signal(symbol, gpt3_prompt, ichimoku_data):
 
         plt.show()
 
-# Release Control Wave Restriction Level 0
-class ElliottWaveFinder:
-    def __init__(self, data, tolerance=0.05):
-        if not isinstance(data, pd.DataFrame) or 'Close' not in data.columns:
-            raise ValueError("Data should be a pandas DataFrame with a 'Close' column.")
-        
-        self.data = data
-        self.tolerance = tolerance
-        
-    def find_extrema_points(self):
-        extrema = (self.data['Close'].shift(1) > self.data['Close']) & (self.data['Close'].shift(-1) > self.data['Close']) \
-                | (self.data['Close'].shift(1) < self.data['Close']) & (self.data['Close'].shift(-1) < self.data['Close'])
-        return self.data[extrema].index
+def generate_trading_signal(symbol, gpt3_prompt, ichimoku_data, price_data, tolerance=0.05):
+    """
+    Generate a trading signal based on GPT-3.5 output, Evolved Ichimoku Cloud, and Elliott Wave analysis.
 
-    def is_wave_pattern(self, prices):
-        p1, p2, p3, p4, p5 = prices
-        return (abs(p3 - p1) / p1 <= self.tolerance) and (abs(p5 - p1) / p1 <= self.tolerance) and (abs(p3 - p5) / p5 <= self.tolerance)
+    :param symbol: The trading symbol (e.g., "BTC-USD, CRO-USD, DOGE-USD, LRC-USD, MASK-USD, ADA-USD, BCH-USD, ETH-USD")
+    :param gpt3_prompt: A prompt for GPT-3.5 to generate a response
+    :param ichimoku_data: A dataframe containing Evolved Ichimoku Cloud data
+    :param price_data: A dataframe containing price data with 'Close' column for Elliott Wave analysis
+    :param tolerance: Tolerance for the price difference in wave patterns
+    :return: A string representing the trading signal, either "buy", "sell", or "hold"
+    """
 
-    def find_elliott_waves(self):
-        waves = []
-        extrema_points = self.find_extrema_points()
+    # Generate GPT-3.5 response
+    input_ids = tokenizer.encode(gpt3_prompt, return_tensors="pt")
+    output = model.generate(input_ids, max_length=50, num_return_sequences=1)
+    gpt3_response = tokenizer.decode(output[0], skip_special_tokens=True)
 
-        for i in range(len(extrema_points) - 4):
-            price_points = self.data['Close'][extrema_points[i:i+5]]
-            if self.is_wave_pattern(price_points):
-                waves.append((extrema_points[i], extrema_points[i+1], extrema_points[i+2], extrema_points[i+3], extrema_points[i+4]))
-
-    def find_elliott_wave(self, data, tolerance=0.05):
-        # Ensure data has a 'Close' column
-        if 'Close' not in data.columns:
-            raise ValueError("Data should have a 'Close' column.")
-
-        return waves
-    
-    # Artificial Intelligence Will now Use Nuclear Fusion
-def combined_signal(data, sentiment_score, ichimoku_cloud, elliott_wave, tolerance=0.05):
-
-    # Check if the sentiment_score is a number between -1 and 1
-    if not (isinstance(sentiment_score, (int, float)) and -1 <= sentiment_score <= 1):
-        raise ValueError("Sentiment score should be a number between -1 and 1.")
-    
     # Analyze the Ichimoku Cloud data to get a trading signal
-    ichimoku_signal = ichimoku_cloud.analyze()
+    ichimoku_signal = analyze_ichimoku_cloud(ichimoku_data)
 
-    # Find Elliott Waves in the data
-    waves = elliott_wave.find_elliott_wave(data, tolerance)
+    # Find Elliott Waves in the price data
+    waves = find_elliott_wave(price_data, tolerance)
 
-    # Analyze the Elliott Wave data to get a trading signal
-    elliott_wave_signal = 1 if len(waves) > 0 else 0
-
-    # Combine the GPT-3.5 sentiment score, Ichimoku Cloud trading signal, and Elliott Wave trading signal
-    combined_score = sentiment_score + ichimoku_signal + elliott_wave_signal
+    # Combine the GPT-3.5 sentiment score, Ichimoku Cloud trading signal, and Elliott Wave analysis
+    combined_score = sentiment_score + ichimoku_signal + len(waves)
 
     # Generate a final trading signal based on the combined score
     if combined_score > 0:
@@ -271,6 +265,7 @@ def analyze_gpt3_response(response):
 # Define the reinforcement learning trading agent
 class RLTradingAgent:
     def __init__(self, symbols, trading_interval, order_size, stop_loss_pct, take_profit_pct):
+        # Initialize instance variables
         self.symbols = symbols
         self.trading_interval = trading_interval
         self.order_size = order_size
@@ -309,6 +304,103 @@ class RLTradingAgent:
             self.rewards_dict[symbol] = []
             self.done_dict[symbol] = False
             self.current_step_dict[symbol] = 0
+
+    def get_state(self, symbol):
+        # Combine all the technical indicators to form the state
+        state = np.column_stack((self.df_dict[symbol]["close"].values,
+                                 self.rsi_dict[symbol].values,
+                                 self.bbands_dict[symbol].values.flatten(),
+                                 self.ichimoku_dict[symbol].values.flatten(),
+                                 self.prev_action_dict[symbol],
+                                 self.prev_profit_dict[symbol]))
+        return state
+
+    def get_action(self, symbol, state):
+        # Epsilon-greedy action selection
+        if np.random.rand() < self.epsilon:
+            action = np.random.choice([0, 1])
+        else:
+            q_values = self.q_table_dict[symbol].get(str(state), [0, 0])
+            action = np.argmax(q_values)
+        return action
+
+# Define the deep learning model (choose one of the model definitions)
+model = Sequential()
+model.add(LSTM(units=50, return_sequences=True, input_shape=(60, 1)))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50))
+model.add(Dropout(0.2))
+model.add(Dense(units=1))# Define the deep learning model (choose one of the model definitions)
+model = Sequential()
+model.add(LSTM(units=50, return_sequences=True, input_shape=(60, 1)))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50))
+model.add(Dropout(0.2))
+model.add(Dense(units=1))
+
+# Prepare data for training
+X = []
+y = []
+for symbol, df in data.items():
+    
+    # Calculate technical indicators
+    high = df["price"].rolling(lookback_window).max()
+    low = df["price"].rolling(lookback_window).min()
+    close = df["price"]
+    volume = np.log10(df["price"].rolling(lookback_window).mean())
+    ema_12 = df["price"].ewm(span=12).mean()
+    ema_26 = df["price"].ewm(span=26).mean()
+    macd = ema_12 - ema_26
+    signal = macd.ewm(span=9).mean()
+    rsi = talib.RSI(df["price"].values, timeperiod=14)
+
+    # Combine features into array
+    features = np.column_stack((high, low, close, volume, macd, signal))
+
+    # Normalize features
+    features = (features - np.mean(features, axis=0)) / np.std(features, axis=0)
+
+    # Add features and labels to training data
+    for i in range(lookback_window, len(df) - 1):
+        X.append(features[i - lookback_window:i])
+        y.append(df["price"].iloc[i + 1])
+
+# Convert to numpy arrays
+X = np.array(X)
+y = np.array(y)
+
+# Define deep learning model
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(lookback_window, n_features)),
+    tf.keras.layers.LSTM(units=32),
+    tf.keras.layers.Dense(units=16, activation="relu"),
+    tf.keras.layers.Dense(units=1)
+])
+
+# Compile model with optimizer and loss function
+optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+model.compile(optimizer=optimizer, loss="mse")
+
+# Train model on data
+model.fit(X_train, y_train, epochs=100, batch_size=32)
+history = model.fit(X[:n_days], y[:n_days], batch_size=batch_size, epochs=n_epochs)
+
+# Make predictions using the trained model
+X_test = []
+for symbol in symbols:
+    data = crypto_data[symbol].values
+    X_test.append(data[-60:])
+X_test = np.array(X_test)
+X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+predictions = model.predict(X_test)
+
+# Print the predicted prices for the next day
+for i in range(len(symbols)):
+    print(f"The predicted price of {symbols[i]} for the next day is {predictions[i][0]:.2f}.")
 
 # Define a helper function for generating text with GPT-3.5
 def generate_text(prompt, model, tokenizer):
