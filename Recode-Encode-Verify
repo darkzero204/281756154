@@ -38,14 +38,14 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 # Set up Coinbase API credentials
-coinbase_api_key = "XHjxxxxxxn7"
+coinbase_api_key = "XHj9kwVlH1ycown7"
 coinbase_api_secret = "zFpKW1CUl6pDr3vUU2hvRHbVyRaoRhkI"
-coinbase_api_passphrase = "!,Mxxxxxxxfyw"
+coinbase_api_passphrase = "!,M!QiE/v$9tfyw"
 
 coinbase_client = Client(api_key, api_secret)
 
 # Set up OpenAI API key
-openai.api_key = "sk-01tsSLGKFzutxxxxxxxxWTN0P2V1H1SRA"
+openai.api_key = "	sk-...IUfj"
 
 # Set up GPT-3.5-turbo
 model_name = "EleutherAI/gpt-neo-3.5-turbo"
@@ -234,9 +234,6 @@ def generate_trading_signal(symbol, gpt3_prompt, ichimoku_data, price_data, tole
         return "sell"
     else:
         return "hold"
-
-# Load your price data as a pandas DataFrame (data)
-# Example: data = pd.read_csv("price_data.csv")
 
 # Instantiate the EvolvedIchimokuCloud with the appropriate data
 ichimoku_cloud = EvolvedIchimokuCloud(high=data['High'], low=data['Low'], close=data['Close'])
