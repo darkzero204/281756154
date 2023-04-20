@@ -45,7 +45,7 @@ coinbase_api_passphrase = "!,M!QiE/v$9tfyw"
 coinbase_client = Client(api_key, api_secret)
 
 # Set up OpenAI API key
-openai.api_key = "	sk-...IUfj"
+openai.api_key = "sk-...IUfj"
 
 # Set up GPT-3.5-turbo
 model_name = "EleutherAI/gpt-neo-3.5-turbo"
